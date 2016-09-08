@@ -1,39 +1,80 @@
+#ifndef WINUAE_SYSCONFIG_H
+#define WINUAE_SYSCONFIG_H
 
+#pragma warning (disable : 4761)
+#pragma warning (disable : 4996)
+#pragma warning (disable : 4018)
+
+//#define DIRECTINPUT_VERSION  0x0800
+//#define DIRECT3D_VERSION 0x0900
 #define SUPPORT_THREADS
-#define MAX_DPATH 256
+#define MAX_DPATH 1000
 
 /* #define DRIVESOUND */
 /* #define GFXFILTER */
+//#define X86_MSVC_ASSEMBLY
+//#define X86_MSVC_ASSEMBLY_MEMACCESS
+//#define OPTIMIZED_FLAGS
+//#ifndef __i386__
+//#define __i386__
+//#endif
+//#define WINDOWS
+//#define ZLIB_WINAPI
+//#define USE_SOFT_LONG_DOUBLE
+#define PACKAGE_STRING "AmiBerry"
+
+#ifndef UAE_MINI
 
 /* #define DEBUGGER */
 #define FILESYS /* filesys emulation */
 #define UAE_FILESYS_THREADS
 #define AUTOCONFIG /* autoconfig support, fast ram, harddrives etc.. */
 #define JIT /* JIT compiler support */
+#define USE_JIT_FPU
 /* #define NATMEM_OFFSET natmem_offset */
+//#define USE_NORMAL_CALLING_CONVENTION 0
+//#define USE_X86_FPUCW 1
+//#define WINDDK /* Windows DDK available, keyboard leds and harddrive support */
 /* #define CATWEASEL */ /* Catweasel MK2/3 support */
 /* #define AHI */ /* AHI sound emulation */
 /* #define ENFORCER */ /* UAE Enforcer */
 #define ECS_DENISE /* ECS DENISE new features */
 #define AGA /* AGA chipset emulation (ECS_DENISE must be enabled) */
 #define CD32 /* CD32 emulation */
-/* #define CDTV */ /* CDTV emulation */
+#define CDTV /* CDTV emulation */
+//#define D3D /* D3D display filter support */
+//#define OPENGL /* OpenGL display filter support */
 /* #define PARALLEL_PORT */ /* parallel port emulation */
+//#define PARALLEL_DIRECT /* direct parallel port emulation */
 /* #define SERIAL_PORT */ /* serial port emulation */
+//#define SERIAL_ENET /* serial port UDP transport */
 /* #define SCSIEMU */ /* uaescsi.device emulation */
 /* #define UAESERIAL */ /* uaeserial.device emulation */
 #define FPUEMU /* FPU emulation */
-/* #define FPU_UAE */
+#define FPU_UAE
+//#define WITH_SOFTFLOAT
 /* #define MMUEMU Aranym 68040 MMU */
 /* #define FULLMMU Aranym 68040 MMU */
 #define CPUEMU_0 /* generic 680x0 emulation */
-#define CPUEMU_11 /* 68000+prefetch emulation */
-/* #define CPUEMU_12 */ /* cycle-exact cpu&blitter */
+#define CPUEMU_11 /* 68000/68010 prefetch emulation */
+#define CPUEMU_13 /* 68000/68010 cycle-exact cpu&blitter */
+#define CPUEMU_20 /* 68020 prefetch */
+#define CPUEMU_21 /* 68020 "cycle-exact" + blitter */
+#define CPUEMU_22 /* 68030 prefetch */
+#define CPUEMU_23 /* 68030 "cycle-exact" + blitter */
+#define CPUEMU_24 /* 68060 "cycle-exact" + blitter */
+#define CPUEMU_25 /* 68040 "cycle-exact" + blitter */
+#define CPUEMU_31 /* Aranym 68040 MMU */
+#define CPUEMU_32 /* Previous 68030 MMU */
+#define CPUEMU_33 /* 68060 MMU */
+#define CPUEMU_40 /* generic 680x0 with JIT direct memory access */
+#define CPUEMU_50 /* generic 680x0 with indirect memory access */
 /* #define ACTION_REPLAY */ /* Action Replay 1/2/3 support */
 #define PICASSO96 /* Picasso96 display card emulation */
 #define UAEGFX_INTERNAL /* built-in libs:picasso96/uaegfx.card */
 #define BSDSOCKET /* bsdsocket.library emulation */
 /* #define CAPS */ /* CAPS-image support */
+//#define SCP /* SuperCardPro */
 /* #define FDI2RAW */ /* FDI 1.0 and 2.x image support */
 /* #define AVIOUTPUT */ /* Avioutput support */
 /* #define PROWIZARD */ /* Pro-Wizard module ripper */
@@ -42,23 +83,89 @@
 /* #define LOGITECHLCD */ /* Logitech G15 LCD */
 #define SAVESTATE /* State file support */
 /* #define A2091 */ /* A590/A2091 SCSI */
+//#define A2065 /* A2065 Ethernet card */
+//#define GFXBOARD /* Hardware graphics board */
 /* #define NCR */ /* A4000T/A4091 SCSI */
+//#define NCR9X /* 53C9X SCSI */
 /* #define SANA2 */ /* SANA2 network driver */
 /* #define AMAX */ /* A-Max ROM adapater emulation */
 /* #define RETROPLATFORM */ /* Cloanto RetroPlayer support */
-
-/* #define INPUT_RECORDER */ /* Use input recoder */
-
-/* #define CUSTOM_SIMPLE */ /* simplified custom chipset emulation */
-/* #define CPUEMU_68000_ONLY */ /* drop 68010+ commands from CPUEMU_0 */
-/* #define ADDRESS_SPACE_24BIT */
+//#define WITH_CHD
+//#define WITH_LUA /* lua scripting */
+//#define WITH_UAENATIVE
+//#define WITH_SLIRP
+//#define WITH_BUILTIN_SLIRP
+//#define WITH_TABLETLIBRARY
+//#define WITH_UAENET_PCAP
+//#define WITH_PPC
+//#define WITH_QEMU_CPU
+//#define WITH_TOCCATA
+//#define WITH_PCI
+//#define WITH_X86
 #define INPUTDEVICE_SIMPLE /* simplified inputdevice for faster emulation */
 
+#else
+
+/* #define SINGLEFILE */
+
+#define CUSTOM_SIMPLE /* simplified custom chipset emulation */
+#define CPUEMU_0
+#define CPUEMU_68000_ONLY /* drop 68010+ commands from CPUEMU_0 */
+#define ADDRESS_SPACE_24BIT
+#ifndef UAE_NOGUI
+#define D3D
+#define OPENGL
+#endif
+#define CAPS
+#define CPUEMU_13
+#define CPUEMU_11
+
+#endif
+
+//#define WITH_SCSI_IOCTL
+//#define WITH_SCSI_SPTI
+
+#define A_ZIP
+//#define A_RAR
+#define A_7Z
+#define A_LHA
+#define A_LZX
+#define A_DMS
+#define A_WRP
+
+#ifndef MAX_PATH
+#define MAX_PATH 256
+#endif
+
+#define UAE_RAND_MAX RAND_MAX
+
+#ifndef GFXFILTER
+#undef OPENGL
+#undef D3D
+#endif
+
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
+#include <stdint.h>
+
+#ifdef WIN64
+#undef X86_MSVC_ASSEMBLY_MEMACCESS
+#undef X86_MSVC_ASSEMBLY
+#define X64_MSVC_ASSEMBLY
+#define SIZEOF_VOID_P 8
+#else
 #define SIZEOF_VOID_P 4
+#endif
 
 #if !defined(AHI)
 #undef ENFORCER
 #endif
+
+typedef long uae_atomic;
 
 /* src/sysconfig.h.  Generated automatically by configure.  */
 /* src/sysconfig.h.in.  Generated automatically from configure.in by autoheader.  */
@@ -104,7 +211,13 @@
 #define STDC_HEADERS 1
 
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#ifdef __GNUC__
 #define TIME_WITH_SYS_TIME 1
+#endif
+
+#ifdef _WIN32_WCE
+#define NO_TIME_H 1
+#endif
 
 /* Define if your <sys/time.h> declares struct tm.  */
 /* #undef TM_IN_SYS_TIME */
@@ -207,7 +320,12 @@
 #define SIZEOF_DOUBLE 8
 
 #define HAVE_ISNAN
-#define HAVE_ISINF
+#undef HAVE_ISINF
+#define isnan _isnan
+
+#ifndef LT_MODULE_EXT
+#define LT_MODULE_EXT _T(".dll")
+#endif
 
 /* Define if you have the bcopy function.  */
 #define HAVE_BCOPY 1
@@ -240,7 +358,9 @@
 #define HAVE_GETOPT 1
 
 /* Define if you have the gettimeofday function.  */
-#define HAVE_GETTIMEOFDAY 1
+#ifndef _WIN32_WCE
+#define HAVE_GETTIMEOFDAY
+#endif
 
 /* Define if you have the isascii function.  */
 #define HAVE_ISASCII 1
@@ -303,7 +423,7 @@
 #define HAVE_VSPRINTF 1
 
 /* Define if you have the <SDL/SDL.h> header file.  */
-/* #undef HAVE_SDL_SDL_H */
+#define HAVE_SDL_SDL_H */
 
 /* Define if you have the <curses.h> header file.  */
 #define HAVE_CURSES_H 1
@@ -356,8 +476,10 @@
 /* Define if you have the <posix_opt.h> header file.  */
 /* #undef HAVE_POSIX_OPT_H */
 
+#ifndef _WIN32_WCE
 /* Define if you have the <string.h> header file.  */
 #define HAVE_STRING_H 1
+#endif
 
 /* Define if you have the <strings.h> header file.  */
 #define HAVE_STRINGS_H 1
@@ -405,7 +527,9 @@
 #define HAVE_SYS_SOUNDCARD_H 1
 
 /* Define if you have the <sys/stat.h> header file.  */
+#ifndef _WIN32_WCE
 #define HAVE_SYS_STAT_H 1
+#endif
 
 /* Define if you have the <sys/statfs.h> header file.  */
 #define HAVE_SYS_STATFS_H 1
@@ -417,10 +541,14 @@
 #define HAVE_SYS_TERMIOS_H 1
 
 /* Define if you have the <sys/time.h> header file.  */
+#ifdef __GNUC__
 #define HAVE_SYS_TIME_H 1
+#endif
 
 /* Define if you have the <sys/types.h> header file.  */
+#ifndef _WIN32_WCE
 #define HAVE_SYS_TYPES_H 1
+#endif
 
 /* Define if you have the <sys/utime.h> header file.  */
 /* #undef HAVE_SYS_UTIME_H */
@@ -429,7 +557,9 @@
 #define HAVE_SYS_VFS_H 1
 
 /* Define if you have the <unistd.h> header file.  */
+#ifdef __GNUC__
 #define HAVE_UNISTD_H 1
+#endif
 
 /* Define if you have the <utime.h> header file.  */
 #define HAVE_UTIME_H 1
@@ -446,19 +576,7 @@
 #define strcmpi(x,y) strcasecmp(x,y)
 #define stricmp(x,y) strcasecmp(x,y)
 
-#define A_ZIP
-//#define A_RAR
-#define A_7Z
-#define A_LHA
-#define A_LZX
-#define A_DMS
-#define A_WRP
-
-#ifndef MAX_PATH
-#define MAX_PATH 256
-#endif
-
-#define WORDS_BIGENDIAN 1
+#define WORDS_BIGENDIAN 0
 
 #define M68K_SPEED_7MHZ_CYCLES 0
 #define M68K_SPEED_14MHZ_CYCLES 1024
@@ -481,8 +599,8 @@ typedef unsigned char boolean;
 #define Sleep(x) usleep(x*1000)
 
 /* Some defines to make it easier to compare files with WinUAE */
-#define _T(x)               x
-#define TCHAR               char
+//#define _T(x)               x
+//#define TCHAR               char
 #define _tzset()            tzset()
 #define _tcsftime(w,x,y,z)  strftime(w,x,y,z)
 #define _timezone           timezone
@@ -522,3 +640,5 @@ typedef unsigned char boolean;
 #define _strtoui64(x,y,z)   strtoll(x,y,z)
 #define _istalnum(x)        isalnum(x)
 #define _tcsspn(x,y)		    strspn(x,y)
+
+#endif /* WINUAE_SYSCONFIG_H */

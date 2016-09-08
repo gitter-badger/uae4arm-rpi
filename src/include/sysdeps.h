@@ -1,6 +1,3 @@
-#ifndef UAE_SYSDEPS_H
-#define UAE_SYSDEPS_H
-
 /*
   * UAE - The Un*x Amiga Emulator
   *
@@ -14,26 +11,77 @@
   *
   * Copyright 1996, 1997 Bernd Schmidt
   */
+#ifndef UAE_SYSDEPS_H
+#define UAE_SYSDEPS_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include "sysconfig.h"
+
+#ifndef UAE
+#define UAE
+#endif
+
+#ifdef __cplusplus
+#include <string>
 using namespace std;
+#else
+#include <string.h>
+#include <ctype.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
 
-#ifdef _GCCRES_
-#undef _GCCRES_
+#ifndef UAE
+#define UAE
 #endif
 
-#ifdef UAE4ALL_NO_USE_RESTRICT
-#define _GCCRES_
+#if defined(__x86_64__) || defined(_M_AMD64)
+#define CPU_x86_64 1
+#define CPU_64_BIT 1
+#elif defined(__i386__) || defined(_M_IX86)
+#define CPU_i386 1
+#elif defined(__arm__) || defined(_M_ARM)
+#define CPU_arm 1
+#elif defined(__powerpc__) || defined(_M_PPC)
+#define CPU_powerpc 1
 #else
-#define _GCCRES_ __restrict__
+#error unrecognized CPU type
 #endif
 
+#ifdef _WIN32
+/* Parameters are passed in ECX, EDX for both x86 and x86-64 (RCX, RDX).
+ * For x86-64, __fastcall is the default, so it isn't really required. */
+#define JITCALL __fastcall
+#elif defined(CPU_x86_64)
+/* Parameters are passed in RDI, RSI by default (System V AMD64 ABI). */
+#define JITCALL
+#elif defined(HAVE_FUNC_ATTRIBUTE_REGPARM)
+/* Parameters are passed in EAX, EDX on x86 with regparm(2). */
+#define JITCALL __attribute__((regparm(2)))
+/* This was originally regparm(3), but as far as I can see only two register
+ * params are supported by the JIT code. It probably just worked anyway
+ * if all functions used max two arguments. */
+#elif !defined(JIT)
+#define JITCALL
+#endif
+#define REGPARAM
+#define REGPARAM2 JITCALL
+#define REGPARAM3 JITCALL
+
+#ifndef PANDORA
+#include <tchar.h>
+#else
+#include "uae/types.h"
+#endif
 #ifndef __STDC__
+#ifndef _MSC_VER
 #error "Your compiler is not ANSI. Get a real one."
+#endif
 #endif
 
 #include <stdarg.h>
@@ -117,51 +165,6 @@ struct utimbuf
 };
 #endif
 
-#if defined(__GNUC__) && defined(AMIGA)
-/* gcc on the amiga need that __attribute((regparm)) must */
-/* be defined in function prototypes as well as in        */
-/* function definitions !                                 */
-#define REGPARAM2 REGPARAM
-#else /* not(GCC & AMIGA) */
-#define REGPARAM2
-#endif
-
-/* sam: some definitions so that SAS/C can compile UAE */
-#if defined(__SASC) && defined(AMIGA)
-#define REGPARAM2
-#define REGPARAM
-#define S_IRUSR S_IREAD
-#define S_IWUSR S_IWRITE
-#define S_IXUSR S_IEXECUTE
-#define S_ISDIR(val) (S_IFDIR & val)
-#define mkdir(x,y) mkdir(x)
-#define truncate(x,y) 0
-#define creat(x,y) open("T:creat",O_CREAT|O_TEMP|O_RDWR) /* sam: for zfile.c */
-#define strcasecmp stricmp
-#define utime(file,time) 0
-struct utimbuf
-{
-    time_t actime;
-    time_t modtime;
-};
-#endif
-
-#ifdef __DOS__
-#include <pc.h>
-#include <io.h>
-#endif
-
-/* Acorn specific stuff */
-#ifdef ACORN
-
-#define S_IRUSR S_IREAD
-#define S_IWUSR S_IWRITE
-#define S_IXUSR S_IEXEC
-
-#define strcasecmp stricmp
-
-#endif
-
 #ifndef L_tmpnam
 #define L_tmpnam 128 /* ought to be safe */
 #endif
@@ -218,15 +221,24 @@ typedef uae_u32 uaecptr;
 #define UVAL64(a) (a ## ul)
 #endif
 
+void atomic_and(volatile uae_atomic *p, uae_u32 v);
+void atomic_or(volatile uae_atomic *p, uae_u32 v);
+uae_atomic atomic_inc(volatile uae_atomic *p);
+uae_atomic atomic_dec(volatile uae_atomic *p);
+uae_u32 atomic_bit_test_and_reset(volatile uae_atomic *p, uae_u32 v);
+
 #ifdef HAVE_STRDUP
 #define my_strdup strdup
 #else
 extern TCHAR *my_strdup(const TCHAR*s);
 #endif
-
 extern TCHAR *my_strdup_ansi(const char*);
+extern void my_trim(TCHAR*);
+extern TCHAR *my_strdup_trim(const TCHAR*);
 extern TCHAR *au(const char*);
 extern char *ua(const TCHAR*);
+extern TCHAR *aucp(const char *s, unsigned int cp);
+extern char *uacp(const TCHAR *s, unsigned int cp);
 extern TCHAR *au_fs(const char*);
 extern char *ua_fs(const TCHAR*, int);
 extern char *ua_copy(char *dst, int maxlen, const TCHAR *src);
@@ -235,6 +247,9 @@ extern char *ua_fs_copy(char *dst, int maxlen, const TCHAR *src, int defchar);
 extern TCHAR *au_fs_copy(TCHAR *dst, int maxlen, const char *src);
 extern char *uutf8(const TCHAR *s);
 extern TCHAR *utf8u(const char *s);
+extern void unicode_init(void);
+extern void to_lower(TCHAR *s, int len);
+extern void to_upper(TCHAR *s, int len);
 
 /* We can only rely on GNU C getting enums right. Mickeysoft VSC++ is known
  * to have problems, and it's likely that other compilers choke too. */
@@ -267,6 +282,91 @@ extern TCHAR *utf8u(const char *s);
 #undef DONT_HAVE_STDIO
 #undef DONT_HAVE_MALLOC
 
+#if defined(WARPUP)
+#define DONT_HAVE_POSIX
+#endif
+
+#if !defined(FSUAE) && defined _WIN32
+
+//#ifdef FSUAE
+//#error _WIN32 should not be defined here
+//#endif
+#if defined __WATCOMC__
+
+#define O_NDELAY 0
+#include <direct.h>
+#define dirent direct
+#define mkdir(a,b) mkdir(a)
+#define strcasecmp stricmp
+
+#elif defined __MINGW32__
+
+#include <winsock.h>
+
+#define O_NDELAY 0
+
+#define FILEFLAG_DIR     0x1
+#define FILEFLAG_ARCHIVE 0x2
+#define FILEFLAG_WRITE   0x4
+#define FILEFLAG_READ    0x8
+#define FILEFLAG_EXECUTE 0x10
+#define FILEFLAG_SCRIPT  0x20
+#define FILEFLAG_PURE    0x40
+
+#define mkdir(a,b) mkdir(a)
+
+#elif defined _MSC_VER
+
+#ifdef HAVE_GETTIMEOFDAY
+#include <winsock.h> // for 'struct timeval' definition
+extern void gettimeofday(struct timeval *tv, void *blah);
+#endif
+
+#define O_NDELAY 0
+
+#define FILEFLAG_DIR     0x1
+#define FILEFLAG_ARCHIVE 0x2
+#define FILEFLAG_WRITE   0x4
+#define FILEFLAG_READ    0x8
+#define FILEFLAG_EXECUTE 0x10
+#define FILEFLAG_SCRIPT  0x20
+#define FILEFLAG_PURE    0x40
+
+#include <io.h>
+#define O_BINARY _O_BINARY
+#define O_WRONLY _O_WRONLY
+#define O_RDONLY _O_RDONLY
+#define O_RDWR   _O_RDWR
+#define O_CREAT  _O_CREAT
+#define O_TRUNC  _O_TRUNC
+#define strcasecmp _tcsicmp 
+#define strncasecmp _tcsncicmp 
+#define W_OK 0x2
+#define R_OK 0x4
+#define STAT struct stat
+#define DIR struct DIR
+struct direct
+{
+	TCHAR d_name[1];
+};
+#include <sys/utime.h>
+#define utimbuf __utimbuf64
+#define USE_ZFILE
+
+#undef S_ISDIR
+#undef S_IWUSR
+#undef S_IRUSR
+#undef S_IXUSR
+#define S_ISDIR(a) (a&FILEFLAG_DIR)
+#define S_ISARC(a) (a&FILEFLAG_ARCHIVE)
+#define S_IWUSR FILEFLAG_WRITE
+#define S_IRUSR FILEFLAG_READ
+#define S_IXUSR FILEFLAG_EXECUTE
+
+#endif
+
+#endif /* _WIN32 */
+
 #if defined PANDORA
 
 #include <ctype.h>
@@ -278,17 +378,6 @@ extern TCHAR *utf8u(const char *s);
 #define FILEFLAG_EXECUTE 0x10
 #define FILEFLAG_SCRIPT  0x20
 #define FILEFLAG_PURE    0x40
-
-#define REGPARAM2
-#define REGPARAM3
-#define REGPARAM
-
-#define abort() \
-  do { \
-    printf ("Internal error; file %s, line %d\n", __FILE__, __LINE__); \
-    SDL_Quit(); \
-    (abort) (); \
-} while (0)
 
 #endif
 
@@ -371,21 +460,42 @@ extern void mallocemu_free(void *ptr);
 #define ASM_SYM_FOR_FUNC(a)
 #endif
 
+#include "target.h"
+
 #ifdef UAE_CONSOLE
 #undef write_log
 #define write_log write_log_standard
 #endif
 
-#ifndef WITH_LOGGING
-#undef write_log
-#define write_log(FORMATO, RESTO...)
-#define write_log_standard(FORMATO, RESTO...)
+#if __GNUC__ - 1 > 1 || __GNUC_MINOR__ - 1 > 6
+extern void write_log(const TCHAR *, ...);
+extern void write_log(const char *, ...) __attribute__((format(printf, 1, 2)));
 #else
-extern void write_log(const TCHAR *format, ...);
-extern FILE *debugfile;
+extern void write_log(const TCHAR *, ...);
+extern void write_log(const char *, ...);
 #endif
-extern void console_out(const TCHAR *, ...);
+extern void write_dlog(const TCHAR *, ...);
+extern int read_log(void);
+
+extern void flush_log(void);
+extern TCHAR *setconsolemode(TCHAR *buffer, int maxlen);
+extern void close_console(void);
+extern void reopen_console(void);
+extern void activate_console(void);
+extern void console_out(const TCHAR *);
+extern void console_out_f(const TCHAR *, ...);
+extern void console_flush(void);
+extern int console_get(TCHAR *, int);
+extern bool console_isch(void);
+extern TCHAR console_getch(void);
+extern void f_out(void *, const TCHAR *, ...);
+extern TCHAR* buf_out(TCHAR *buffer, int *bufsize, const TCHAR *format, ...);
 extern void gui_message(const TCHAR *, ...);
+extern int gui_message_multibutton(int flags, const TCHAR *format, ...);
+#define write_log_err write_log
+extern void logging_init(void);
+extern FILE *log_open(const TCHAR *name, int append, int bootlog, TCHAR*);
+extern void log_close(FILE *f);
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -410,9 +520,6 @@ extern void gui_message(const TCHAR *, ...);
 #define NORETURN
 #endif
 #endif
-
-#include "target.h"
-
 /* Every Amiga hardware clock cycle takes this many "virtual" cycles.  This
    used to be hardcoded as 1, but using higher values allows us to time some
    stuff more precisely.
@@ -439,29 +546,23 @@ extern void gui_message(const TCHAR *, ...);
  * Byte-swapping functions
  */
 
-#ifdef ARMV6_ASSEMBLY
-
-STATIC_INLINE uae_u32 do_byteswap_32(uae_u32 v)
-{
-    __asm__(
-        "rev %0, %0"
-        : "=r" (v) : "0" (v));
-    return v;
-}
-
-STATIC_INLINE uae_u32 do_byteswap_16(uae_u32 v)
-{
-    __asm__(
-        "revsh %0, %0\n\t"
-        "uxth %0, %0"
-        : "=r" (v) : "0" (v));
-    return v;
-}
-
-#endif
-
-#define bswap_16(x) (((x) >> 8) | (((x) & 0xFF) << 8))
-
+/* Try to use system bswap_16/bswap_32 functions. */
+#if defined HAVE_BSWAP_16 && defined HAVE_BSWAP_32
+# include <byteswap.h>
+#  ifdef HAVE_BYTESWAP_H
+#  include <byteswap.h>
+# endif
+#else
+/* Else, if using SDL, try SDL's endian functions. */
+# ifdef USE_SDL
+#  include <SDL_endian.h>
+#  define bswap_16(x) SDL_Swap16(x)
+#  define bswap_32(x) SDL_Swap32(x)
+# else
+/* Otherwise, we'll roll our own. */
+#  define bswap_16(x) (((x) >> 8) | (((x) & 0xFF) << 8))
+#  define bswap_32(x) (((x) << 24) | (((x) << 8) & 0x00FF0000) | (((x) >> 8) & 0x0000FF00) | ((x) >> 24))
+# endif
 #endif
 
 #ifndef __cplusplus
@@ -485,3 +586,13 @@ extern void xfree(const void*);
 #define xfree(T) free(T)
 
 #endif
+
+#define DBLEQU(f, i) (abs ((f) - (i)) < 0.000001)
+
+#ifdef HAVE_VAR_ATTRIBUTE_UNUSED
+#define NOWARN_UNUSED(x) __attribute__((unused)) x
+#else
+#define NOWARN_UNUSED(x) x
+#endif
+
+#endif /* UAE_SYSDEPS_H */

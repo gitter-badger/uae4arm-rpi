@@ -8,11 +8,20 @@
 
 #include <SDL.h>
 
+#ifdef _WIN32_WCE
+#define TARGET_NAME "WinCE"
+#define TARGET_NO_AUTOCONF
+#define TARGET_NO_ZFILE
+#define DONT_PARSE_CMDLINE
+#else
 #define TARGET_NAME "pandora"
+#endif
+#define TARGET_PROVIDES_DEFAULT_PREFS
+#define TARGET_NO_DITHER
 
 #define NO_MAIN_IN_MAIN_C
 
-#define OPTIONSFILENAME "uaeconfig"
+#define OPTIONSFILENAME _T("default.uae")
 
 extern int emulating;
 
@@ -56,7 +65,7 @@ void SimulateMouseOrJoy(int code, int keypressed);
 void reinit_amiga(void);
 int count_HDs(struct uae_prefs *p);
 extern void gui_force_rtarea_hdchange(void);
-extern bool hardfile_testrdb (const TCHAR *filename);
+extern bool hardfile_testrdb(const char *filename);
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,24 +77,24 @@ void trace_end (void);
 #endif
 
 
-STATIC_INLINE size_t uae_tcslcpy(TCHAR *dst, const TCHAR *src, size_t size)
+static __inline__ size_t uae_tcslcpy(char *dst, const char *src, size_t size)
 {
     if (size == 0)
     {
         return 0;
     }
-    size_t src_len = _tcslen(src);
+	size_t src_len = strlen(src);
     size_t cpy_len = src_len;
     if (cpy_len >= size)
     {
         cpy_len = size - 1;
     }
-    memcpy(dst, src, cpy_len * sizeof(TCHAR));
-    dst[cpy_len] = _T('\0');
+	memcpy(dst, src, cpy_len * sizeof(char));
+    dst[cpy_len] = ('\0');
     return src_len;
 }
 
-STATIC_INLINE size_t uae_strlcpy(char *dst, const char *src, size_t size)
+static __inline__ size_t uae_strlcpy(char *dst, const char *src, size_t size)
 {
     if (size == 0)
     {
@@ -102,7 +111,7 @@ STATIC_INLINE size_t uae_strlcpy(char *dst, const char *src, size_t size)
     return src_len;
 }
 
-STATIC_INLINE int max(int x, int y)
+static __inline__ int max(int x, int y)
 {
     return x > y ? x : y;
 }
